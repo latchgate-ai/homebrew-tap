@@ -1,0 +1,76 @@
+# Validate the Homebrew formula on every push and PR.
+#
+# Two jobs:
+#   audit  — runs `brew audit` to catch formula style/syntax issues.
+#   install-test — attempts a real install on macOS (only when checksums
+#                  are not placeholders, i.e. after a release update).
+#
+# The audit job runs on every push. The install-test job is skipped when
+# the formula still has PLACEHOLDER_ tokens (pre-release state).
+
+name: Formula CI
+
+on:
+  push:
+    branches: [main]
+    paths: ["Formula/**"]
+  pull_request:
+    paths: ["Formula/**"]
+
+jobs:
+  audit:
+    name: brew audit
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tap locally
+        run: |
+          mkdir -p "$(brew --repository)/Library/Taps/latchgate-ai/homebrew-tap"
+          ln -sf "$GITHUB_WORKSPACE/Formula" \
+            "$(brew --repository)/Library/Taps/latchgate-ai/homebrew-tap/Formula"
+
+      - name: brew audit --formula
+        run: brew audit --formula Formula/latchgate.rb
+
+  install-test:
+    name: brew install + test
+    runs-on: macos-latest
+    # Only run when real checksums are present (not PLACEHOLDER_).
+    if: ${{ !contains(github.event.head_commit.message, '[skip install]') }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for placeholder checksums
+        id: check
+        run: |
+          if grep -q "PLACEHOLDER_" Formula/latchgate.rb; then
+            echo "has_placeholders=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_placeholders=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tap locally
+        if: steps.check.outputs.has_placeholders == 'false'
+        run: |
+          mkdir -p "$(brew --repository)/Library/Taps/latchgate-ai/homebrew-tap"
+          ln -sf "$GITHUB_WORKSPACE/Formula" \
+            "$(brew --repository)/Library/Taps/latchgate-ai/homebrew-tap/Formula"
+
+      - name: brew install
+        if: steps.check.outputs.has_placeholders == 'false'
+        run: brew install latchgate-ai/tap/latchgate
+
+      - name: brew test
+        if: steps.check.outputs.has_placeholders == 'false'
+        run: brew test latchgate-ai/tap/latchgate
+
+      - name: Verify binary on PATH
+        if: steps.check.outputs.has_placeholders == 'false'
+        run: |
+          which latchgate
+          latchgate --version
+
+      - name: Skip notice
+        if: steps.check.outputs.has_placeholders == 'true'
+        run: echo "::notice::Skipping install test — formula has placeholder checksums."
