@@ -5,7 +5,7 @@
 # Installs two binaries:
 #
 #   latchgate   Server, CLI, and operator tooling.
-#   latch-mcp   MCP adapter — bridges IDE agents (Cursor, Claude Desktop,
+#   latchgate-mcp   MCP adapter — bridges IDE agents (Cursor, Claude Desktop,
 #               Cline, Windsurf, Codex CLI) to a running gate instance.
 #
 # Every tool call an agent makes is authenticated, policy-evaluated,
@@ -25,7 +25,6 @@
 class Latchgate < Formula
   desc "Execution security kernel for AI agents"
   homepage "https://github.com/latchgate-ai/latchgate"
-  version "0.1.4"
   license "Apache-2.0"
 
   livecheck do
@@ -37,27 +36,27 @@ class Latchgate < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/latchgate-ai/latchgate/releases/download/v0.1.4/latchgate-v0.1.4-aarch64-apple-darwin.tar.gz"
       sha256 "2ecae0cb0a8e62b7b30667f1ca742feddca2f2bdf8c0686610413ad276090493"
     else
-      url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/latchgate-ai/latchgate/releases/download/v0.1.4/latchgate-v0.1.4-x86_64-apple-darwin.tar.gz"
       sha256 "76d116fe3c752178d29c6fa8affdb6a90011f1dd72ce1c63a6137001dafba476"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-aarch64-unknown-linux-gnu.tar.gz"
+      url "https://github.com/latchgate-ai/latchgate/releases/download/v0.1.4/latchgate-v0.1.4-aarch64-unknown-linux-gnu.tar.gz"
       sha256 "4b7790779f0509287924576b808bb9543b1b442688347c22540dcde0fe6c2292"
     else
-      url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-x86_64-unknown-linux-gnu.tar.gz"
+      url "https://github.com/latchgate-ai/latchgate/releases/download/v0.1.4/latchgate-v0.1.4-x86_64-unknown-linux-gnu.tar.gz"
       sha256 "0f2f973391c0781becb0e6ddd1be04aaa9133d2992d4fc5fea1e2fbf12edb858"
     end
   end
 
   def install
     bin.install "latchgate"
-    bin.install "latch-mcp"
+    bin.install "latchgate-mcp"
   end
 
   def caveats
@@ -70,7 +69,7 @@ class Latchgate < Formula
              latchgate up
 
         3. Configure your IDE:
-             latch-mcp install --ide cursor    # or: claude, cline, windsurf, codex
+             latchgate-mcp install --ide cursor    # or: claude, cline, windsurf, codex
 
         4. Restart your IDE — every tool call now goes through LatchGate.
 
@@ -97,29 +96,29 @@ class Latchgate < Formula
     bash_completions = shell_output("#{bin}/latchgate completions bash")
     assert_match "latchgate", bash_completions
 
-    # ── latch-mcp ────────────────────────────────────────────────────────
+    # ── latchgate-mcp ────────────────────────────────────────────────────────
 
-    assert_match version.to_s, shell_output("#{bin}/latch-mcp --version")
+    assert_match version.to_s, shell_output("#{bin}/latchgate-mcp --version")
 
-    mcp_help = shell_output("#{bin}/latch-mcp --help")
+    mcp_help = shell_output("#{bin}/latchgate-mcp --help")
     assert_match "serve", mcp_help
     assert_match "install", mcp_help
 
     # Verify --dry-run for each JSON-based IDE produces valid JSON
     # containing the latchgate server entry.
     %w[cursor claude cline windsurf].each do |ide|
-      output = shell_output("#{bin}/latch-mcp install --ide #{ide} --dry-run 2>&1")
+      output = shell_output("#{bin}/latchgate-mcp install --ide #{ide} --dry-run 2>&1")
       assert_match "latchgate", output
 
       # The JSON snippet is written to stdout; stderr has the dry-run
       # banner. Extract stdout-only content and verify it parses.
-      json_output = shell_output("#{bin}/latch-mcp install --ide #{ide} --dry-run")
+      json_output = shell_output("#{bin}/latchgate-mcp install --ide #{ide} --dry-run")
       require "json"
       JSON.parse(json_output)
     end
 
     # Codex uses TOML — verify the snippet contains the server entry.
-    codex_output = shell_output("#{bin}/latch-mcp install --ide codex --dry-run")
+    codex_output = shell_output("#{bin}/latchgate-mcp install --ide codex --dry-run")
     assert_match "mcp_servers.latchgate", codex_output
   end
 end
