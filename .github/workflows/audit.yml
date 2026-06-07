@@ -31,7 +31,7 @@ jobs:
             "$(brew --repository)/Library/Taps/latchgate-ai/homebrew-tap/Formula"
 
       - name: brew audit --formula
-        run: brew audit --formula Formula/latchgate.rb
+        run: brew audit --formula latchgate
 
   install-test:
     name: brew install + test

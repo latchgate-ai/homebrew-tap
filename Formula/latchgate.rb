@@ -28,9 +28,6 @@ class Latchgate < Formula
   version "0.1.4"
   license "Apache-2.0"
 
-  # No source compilation — pre-built binaries only.
-  bottle :unneeded
-
   livecheck do
     url "https://github.com/latchgate-ai/latchgate/releases/latest"
     strategy :github_latest

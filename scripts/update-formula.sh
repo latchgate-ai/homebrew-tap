@@ -38,6 +38,15 @@ fail()  { printf "${RED}✗ %s${RESET}\n" "$*" >&2; exit 1; }
 command -v curl >/dev/null 2>&1 || fail "curl is required."
 command -v gh >/dev/null 2>&1   || fail "gh (GitHub CLI) is required for attestation verification. Install: https://cli.github.com"
 
+# Check whether `gh attestation` is available (requires gh ≥ 2.49.0).
+CAN_ATTEST=true
+if ! gh attestation --help >/dev/null 2>&1; then
+    CAN_ATTEST=false
+    printf "${RED}⚠${RESET}  gh attestation not supported (gh ≥ 2.49.0 required). "
+    printf "Attestation verification will be ${BOLD}skipped${RESET}.\n"
+    printf "   Upgrade: ${BOLD}brew upgrade gh${RESET}  or  ${BOLD}https://cli.github.com${RESET}\n\n"
+fi
+
 # ── Resolve version ──────────────────────────────────────────────────────
 
 if [ -n "${1:-}" ]; then
@@ -96,11 +105,13 @@ for target in "${TARGETS[@]}"; do
         fail "Download failed: $url — does the release asset exist?"
     fi
 
-    info "Verifying attestation for ${filename}..."
-    if ! gh attestation verify "$dest" --repo "${REPO}" 2>&1; then
-        fail "Attestation verification failed for ${filename}. The artifact may have been tampered with."
+    if [ "$CAN_ATTEST" = true ]; then
+        info "Verifying attestation for ${filename}..."
+        if ! gh attestation verify "$dest" --repo "${REPO}" 2>&1; then
+            fail "Attestation verification failed for ${filename}. The artifact may have been tampered with."
+        fi
+        ok "Attestation verified: ${target}"
     fi
-    ok "Attestation verified: ${target}"
 
     sha=$(sha_cmd "$dest")
     SHAS[$target]="$sha"
@@ -155,7 +166,7 @@ ok "All 4 checksums present"
 
 if command -v brew >/dev/null 2>&1; then
     info "Running brew audit..."
-    if brew audit --formula "$FORMULA_PATH" 2>&1; then
+    if brew audit --formula latchgate 2>&1; then
         ok "brew audit passed"
     else
         # Non-fatal: audit may fail on CI without a full Homebrew install.
