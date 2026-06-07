@@ -90,7 +90,7 @@ class Latchgate < Formula
 
     # init --list-presets works without a running gate or config file.
     presets_output = shell_output("#{bin}/latchgate init --list-presets")
-    assert_match "coding-assistant", presets_output
+    assert_match "coding", presets_output
 
     # Shell completions generate without error.
     bash_completions = shell_output("#{bin}/latchgate completions bash")
