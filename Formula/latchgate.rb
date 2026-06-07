@@ -25,7 +25,7 @@
 class Latchgate < Formula
   desc "Execution security kernel for AI agents"
   homepage "https://github.com/latchgate-ai/latchgate"
-  version "0.1.0"
+  version "0.1.4"
   license "Apache-2.0"
 
   # No source compilation — pre-built binaries only.
@@ -41,20 +41,20 @@ class Latchgate < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-aarch64-apple-darwin.tar.gz"
-      sha256 "PLACEHOLDER_AARCH64_APPLE_DARWIN"
+      sha256 "2ecae0cb0a8e62b7b30667f1ca742feddca2f2bdf8c0686610413ad276090493"
     else
       url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-x86_64-apple-darwin.tar.gz"
-      sha256 "PLACEHOLDER_X86_64_APPLE_DARWIN"
+      sha256 "76d116fe3c752178d29c6fa8affdb6a90011f1dd72ce1c63a6137001dafba476"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "PLACEHOLDER_AARCH64_UNKNOWN_LINUX_GNU"
+      sha256 "4b7790779f0509287924576b808bb9543b1b442688347c22540dcde0fe6c2292"
     else
       url "https://github.com/latchgate-ai/latchgate/releases/download/v#{version}/latchgate-v#{version}-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "PLACEHOLDER_X86_64_UNKNOWN_LINUX_GNU"
+      sha256 "0f2f973391c0781becb0e6ddd1be04aaa9133d2992d4fc5fea1e2fbf12edb858"
     end
   end
 
